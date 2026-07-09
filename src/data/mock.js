@@ -8,7 +8,7 @@ const tareas = [
   {
     id: 2,
     title: "Sacar la basura",
-    descripcion: "Resiar los tachos de toda la casa",
+    descripcion: "Revisar los tachos de toda la casa",
     status: false
   },
   {
