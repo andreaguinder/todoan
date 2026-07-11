@@ -8,38 +8,23 @@ import { Footer } from "./components/Footer/Footer";
 import { tareas } from "./data/mock";
 import { ModalSuccess } from './components/ModalSuccess/ModalSuccess';
 import { UpdateToast } from './components/UpdateToast/UpdateToast';
+import { ContainerLoading } from "./components/ContainerLoading/ContainerLoading";
 
-// 🚀 Reemplazamos el useLocalStorage viejo por el de Firebase
+// 🚀 Traemos el estado global de autenticación como en Zylos
+import { useAuth } from "./context/AuthContext";
 import { useFirebaseTasks } from "./hooks/useFirebaseTasks";
-import { auth, googleProvider } from "./config/firebase";
-import { signInWithPopup, signOut } from "firebase/auth";
 
 import logo from "./assets/logo-todoan.png";
 
 function App() {
-  // Cambiamos al nuevo hook inteligente. Le pasamos el mock 'tareas' como valor inicial
-  const [listaTareas, setListaTareas, user] = useFirebaseTasks(tareas);
+  // 💡 Consumimos el usuario y los métodos del Contexto global
+  const { user, loginWithGoogle, logout, authLoading } = useAuth();
 
-  // Funciones de autenticación directas
-  const loginConGoogle = async () => {
-    try {
-      await signInWithPopup(auth, googleProvider);
-    } catch (error) {
-      console.error("Error al iniciar sesión con Google", error);
-    }
-  };
+  // Mantenemos tu hook inteligente pasándole el user que viene del Contexto
+  const [listaTareas, setListaTareas] = useFirebaseTasks(tareas);
 
-  const logout = async () => {
-    try {
-      await signOut(auth);
-    } catch (error) {
-      console.error("Error al cerrar sesión", error);
-    }
-  };
-
-  // Tus funciones quedan exactamente igual porque setListaTareas hace toda la magia por detrás
+  // Tus funciones de negocio quedan exactamente igual
   const agregarTarea = (dataTareas) => {
-    // Usamos una estretagia más segura para los IDs autoincrementales basados en lo que ya hay
     const nuevoId = listaTareas.length > 0 ? Math.max(...listaTareas.map(t => t.id)) + 1 : 1;
     setListaTareas([{ id: nuevoId, ...dataTareas }, ...listaTareas]);
   };
@@ -76,16 +61,22 @@ function App() {
     return () => window.removeEventListener('appinstalled', handleAppInstalled);
   }, []);
 
+  // Opcional: Podés meter un loader estético mientras Firebase chequea la sesión inicial
+  if (authLoading) {
+    return (
+      <ContainerLoading/>
+    );
+  }
+
   return (
     <>
       <ContenedorGeneral>
-        {/* 💡 Le pasamos los datos del usuario y las funciones de login a la Navbar para que maneje el botón */}
         <Navbar 
           imagen={logo} 
           alt={logoAlt} 
           onSearch={(valor) => setBusqueda(valor)}
           user={user}
-          onLogin={loginConGoogle}
+          onLogin={loginWithGoogle}
           onLogout={logout}
         />
         
